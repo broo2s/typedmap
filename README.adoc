@@ -1,0 +1,261 @@
+= Typedmap
+
+[.normal]
+`typedmap` is an implementation of heterogeneous type-safe map pattern in Kotlin. It is a data structure similar to a regular map, but with two somewhat contradicting features:
+
+* Heterogeneous - it can store items of completely different types (so this is like `Map<Any?, Any?>`).
+* Type-safe - we can access the data in a type-safe manner and without manual casting (unlike `Map<Any?, Any?>`).
+
+To accomplish this, instead of parameterizing the map as usual, we need to parameterize the key. Keys are used both for identifying items in the map and to provide us with the information about the type of their associated values.
+
+As this is much easier to explain and understand by looking at examples, we will go straight to the code!
+
+== Table of Contents
+
+* <<Examples>>
+  ** <<Get by Type>>
+  ** <<Get by Key>>
+  ** <<Key With Data>>
+* <<Installation>>
+* <<Building>>
+* <<Use Cases>>
+  ** <<Real-World Examples>>
+  ** <<Alternatives>>
+* <<References>>
+
+== Examples
+
+=== Get by Type
+
+Probably the most common example of a similar data structure is an API where we provide a `Class` to get an instance of it. In Java, it could look like this:
+
+[source,java]
+----
+public <T> T get(Class<T> cls)
+----
+
+Guava's https://github.com/google/guava/blob/master/guava/src/com/google/common/collect/ClassToInstanceMap.java[ClassToInstanceMap] is a good example of such a data structure. Additionally, there are e.g. https://javaee.github.io/javaee-spec/javadocs/javax/persistence/EntityManager.html#unwrap-java.lang.Class-[EntityManager.unwrap()] and https://javaee.github.io/javaee-spec/javadocs/javax/enterprise/inject/spi/BeanManager.html#getExtension-java.lang.Class-[BeanManager.getExtension()] methods that utilize similar API, however, their purpose is more specialized.
+
+`typedmap` supports this feature with a clean API:
+
+[source,kotlin]
+----
+// create a typed map
+val sess = simpleTypedMap()
+
+// add a User item
+sess += User("alice")
+
+// get an item of the User type
+val user = sess.get<User>()
+
+println("User: $user")
+// User(username=alice)
+----
+
+Due to advanced type inferring in Kotlin, in many cases we don't need to specify a type when getting an item:
+
+[source,kotlin]
+----
+fun processUser(user: User) { ... }
+
+processUser(sess.get()) // Works as expected
+----
+
+[source,kotlin]
+----
+fun getUser(): User {
+    return sess.get() // Works as expected
+}
+----
+
+`typedmap` fully supports parameterized types:
+
+[source,kotlin]
+----
+sess += listOf(1, 2, 3, 4, 5)
+sess += listOf("a", "b", "c", "d", "e")
+
+println("List<Int>: ${sess.get<List<Int>>()}")
+// [1, 2, 3, 4, 5]
+println("List<String>: ${sess.get<List<String>>()}")
+// [a, b, c, d, e]
+----
+
+NOTE: `SimpleTypedMap`, which we use here, does not support polymorphism. Both `get<Collection<Int>>()` and `get<List<Number>>()` would not find a requested item and throw an exception. Polymorphism could be supported by more advanced implementations of `TypedMap`.
+
+=== Get by Key
+
+Looking for items by their type is very convenient, but in many cases this is not enough. For example, it is difficult to store multiple instances of the same class and access them individually. Moreover, if we need to store an item of a common type, e.g. `String`, then the code `get<String>()` becomes enigmatic, because it is not clear what is the `String` we requested. In such cases, we can create keys to identify items in the map.
+
+Let's assume we develop a web application, and we store some data in the web session. In the previous example, we stored a user object in the session, but this time we just need to store a username. In addition, we would like to store a session ID and visits count. We have to create a key for each item and use these keys to identify values:
+
+[source,kotlin]
+----
+object Username : TypedKey<String>()
+object SessionId : TypedKey<String>()
+object VisitsCount : TypedKey<Int>()
+
+sess[Username] = "alice"
+sess[SessionId] = "0123456789abcdef"
+sess[VisitsCount] = 42
+
+println("Username: ${sess[Username]}")
+// "alice"
+println("SessionId: ${sess[SessionId]}")
+// "0123456789abcdef"
+println("VisitsCount: ${sess[VisitsCount]}")
+// 42
+----
+
+When creating a key, we need to provide a type of its associated value. This makes possible to provide a fully type-safe API:
+
+[source,kotlin]
+----
+val username = sess[Username] // type: String
+val visits = sess[VisitsCount] // type: Int
+
+sess[Username] = 50 // compile error
+----
+
+Similarly as in the previous section, we can use keys in conjunction with parameterized types:
+
+[source,kotlin]
+----
+object UserIds : TypedKey<List<Int>>()
+object Labels : TypedKey<List<String>>()
+
+sess[UserIds] = listOf(1, 2, 3, 4, 5)
+sess[Labels] = listOf("a", "b", "c", "d", "e")
+sess[Labels] = listOf(1, 2, 3, 4, 5) // compile error
+
+println("UserIds: ${sess[UserIds]}")
+// [1, 2, 3, 4, 5]
+println("Labels: ${sess[Labels]}")
+// [a, b, c, d, e]
+----
+
+=== Key With Data
+
+Declaring keys in the way described above is fine if we need to store a finite set of known items, so we can create a distinct key for each of them. In practice though, we very often need to create keys dynamically and store an arbitrary number of items in a map. This is supported by `typedmap` as well, and we still keep its type-safety feature. In fact, this case is implemented in `typedmap` in a very similar way to regular maps.
+
+Instead of creating the key as a singleton object, we need to define it as a class. `hashCode()` and `equals()` have to be properly implemented, so the easiest is to use a `data class`:
+
+[source,kotlin]
+----
+// value
+data class Order(
+    val orderId: Int,
+    val items: List<String>
+)
+
+// key
+data class OrderKey(
+    val orderId: Int
+) : TypedKey<Order>()
+
+sess[OrderKey(1)] = Order(1, listOf("item1", "item2"))
+sess[OrderKey(2)] = Order(2, listOf("item3", "item4"))
+
+println("OrderKey(1): ${sess[OrderKey(1)]}")
+// Order(orderId=1, items=[item1, item2])
+println("OrderKey(2): ${sess[OrderKey(2)]}")
+// Order(orderId=2, items=[item3, item4])
+----
+
+This example could be improved by using the `AutoKey` util. `AutoKey` is a very simple interface that we can implement to make map items responsible for creating their keys:
+
+[source,kotlin]
+----
+data class Order(
+    val orderId: Int,
+    val items: List<String>
+) : AutoKey<Order> {
+    override val typedKey get() = OrderKey(orderId)
+}
+
+sess += Order(1, listOf("item1", "item2"))
+sess += Order(2, listOf("item3", "item4"))
+----
+
+NOTE: You could notice that we used `plusAssign()` operator (`+=`) earlier, and it had a different meaning. This is true, `sess += Order()` could be interpreted both as "set by autokey" (so the key is `OrderKey` object) or as "set by type" (key is similar to `Class<Order>`). By default, objects implementing `AutoKey` are stored by autokey, which is probably what we really need. To store autokey objects by their type, we need to use `setByType()` function explicitly.
+
+== Installation
+
+Publishing `typedmap` library to a public Maven repository is a work in progress. Until then, the only way to use it is to manually download a jar file from releases section or to build it from sources. It has two dependencies which have to be resolved manually:
+
+* `org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.0`
+* `org.jetbrains.kotlin:kotlin-reflect:1.5.0`
+
+After adding the jar file and dependencies to a project, we can start using `typedmap`:
+
+[source,kotlin]
+val map = simpleTypedMap()
+
+== Building
+
+To build the project from sources, run the following command:
+
+.Linux / macOS
+[source,shell]
+$ ./gradlew build
+
+.Windows
+[source,dos]
+gradlew.bat build
+
+After a successful build, the resulting jar file will be placed in:
+
+* `typedmap-core/build/libs/typedmap-core.jar`
+
+== Use Cases
+
+Some people may ask: what do we need this for? Or even more specifically: how is the typed map better than just a regular class with known and fully typed properties? Well, in most cases it is not. However, there are cases where such a data structure could be very useful.
+
+Sometimes, we need to separate the code responsible for providing a data storage and the code storing its data there. In such a case, the first component knows nothing about the data it stores, so the data container can't be typed easily. Often, it is represented as `Map<Any, Any>`, `Map<String, Any>` or just `Any/Object`.
+
+Examples:
+
+* Session data in web frameworks - framework provides the storage, web application uses it.
+* Request/response objects in web/network frameworks - they often contain untyped data storage, so middleware or application developer could attach additional data to request/response.
+* Applications with support for plugins - plugins often need to store their data somewhere and application provides a place for it.
+* Data storage shared between loosely coupled modules.
++
+Let's assume we develop some kind of data processing software. Our data processing is very complex, so we divided the whole process into several smaller tasks and organized the code into clean architecture of multiple packages or even separate libraries. Modules produce results of their processing and may consume results of other modules, so we need a central cache for storing these results.
++
+The problem is: central cache needs to know data structures of all available modules, so we partially lose benefits of our clean design. It is even worse if modules are provided as external libraries.
+* Objects designed to be externally extensible, i.e. by other means than subtyping. We can easily add new behavior to a class by extension or static functions, but we can't add any additional data fields to it. Similar example are classes allowing to attach hooks to affect their behavior.
+* Separation of concerns. Often, we divide the code of our application into a utility of generic usage and a code related to an application logic. In such a case we don't want to pollute utility classes with an application logic, but sometimes we still need to somehow reference application objects from utility classes. Usually, it can be solved with generics though.
+
+Above cases aren't very common, some of them are rather rare. Still, it happens from time to time. Generally speaking, whenever we design or use a class which owns a property like `Any` or `Map<String, Any>` with contract like: "Put there any data you need, it won't be modified, but just kept for you", the typed map structure could be potentially useful. Such properties are often named "extras", "extra data", "properties", etc.
+
+=== Real-World Examples
+
+There are several existing examples in Java with similar requirements to described above and implemented using either untyped container and manual casting or with a class-to-instance map or function:
+
+* In Servlet API we could store and retrieve additional untyped data at request level (https://jakarta.ee/specifications/platform/9/apidocs/jakarta/servlet/servletrequest#getAttribute-java.lang.String-[ServletRequest.getAttribute()]), session level (https://jakarta.ee/specifications/platform/9/apidocs/jakarta/servlet/http/httpsession#getAttribute-java.lang.String-[HttpSession.getAttribute()]) and globally (https://jakarta.ee/specifications/platform/9/apidocs/jakarta/servlet/servletcontext#getAttribute-java.lang.String-[ServletContext.getAttribute()]).
+* Jax-RS Filters (middleware) could store/retrieve additional request data using: https://jakarta.ee/specifications/platform/9/apidocs/jakarta/ws/rs/container/containerrequestcontext#getProperty-java.lang.String-[ContainerRequestContext.getProperty()].
+* In JPA we could store custom data in EntityManager in its properties: https://jakarta.ee/specifications/platform/9/apidocs/jakarta/persistence/entitymanager#getProperties--[EntityManager.getProperties()], although I'm not sure this functionality was intended for such purposes.
+* Spring Framework uses untyped map for session data: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/server/WebSession.html#getAttribute-java.lang.String-[WebSession.getAttribute()], https://docs.spring.io/spring-session/docs/current/api/org/springframework/session/Session.html#getAttribute-java.lang.String-[Session.getAttribute()]. It is a little smarter than previous examples, because it uses type inference, so we don't need to cast the value manually. It doesn't change much though - we still need to remember which value was stored with which key and specify the type manually.
+* In Spring Integration one of its main components, https://docs.spring.io/spring-integration/docs/current/reference/html/message.html#message[Message], is a generic data holder/wrapper and it could contain https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/messaging/MessageHeaders.html[headers] which is basically an untyped map. Additionally, there are wrappers for this untyped map to provide a strongly typed API, e.g.: https://github.com/spring-projects/spring-framework/blob/main/spring-messaging/src/main/java/org/springframework/messaging/simp/SimpMessageHeaderAccessor.java[SimpMessageHeaderAccessor].
+* In Android, we very often pass data as untyped https://developer.android.com/reference/android/os/Bundle[Bundle] map, for example in https://developer.android.com/reference/android/content/Intent#getExtras()[Intent extras].
+
+Additionally, there are examples of data structures very similar to `typedmap`. In fact, they exist in one of the most popular libraries for Kotlin:
+
+* https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.coroutines/-coroutine-context/[CoroutineContext] - its `Key` interface and `get()` function. It allows to store any data within a coroutine.
+* https://ktor.io/docs/attributes.html[Attributes] of Ktor web framework by JetBrains. It is used as a storage for middleware.
+
+=== Alternatives
+
+Typed maps aren't the only solution to a similar problem. There are other techniques, including:
+
+* Use untyped map (e.g. `Map<Any?, Any?>`) as a central storage and provide strongly-typed accessors by clients/modules. Accessors could be: extension functions, static functions or even classes that wrap untyped map and provide an easy to use API.
++
+This solution could be very convenient to use, especially with extension functions, however, writing accessors requires much more work than just creating a typed key. Furthermore, `typedmap` naturally guarantees that each key is unique. Accessors need to do the same or they would risk conflicts.
+* class-to-instance maps.
++
+In many cases they are less convenient to use. For example, if we need to store multiple simple items (strings, integers), we need to create a wrapper class for each of them and then wrap/unwrap a value whenever storing/retrieving it. Also, it is not trivial to store collections of items as in <<Key With Data>>.
+
+== References
+
+* https://www.informit.com/articles/article.aspx?p=2861454&seqNum=8[Effective Java by Joshua Bloch, Item 33: Consider typesafe heterogeneous containers]

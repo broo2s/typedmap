@@ -1,0 +1,12 @@
+= TODO
+
+* Measure the performance impact of `ITypedKey.keyType` and `ITypedKey.valueType`.
+  ** We don't really use these properties for most cases - they could be useful for more specific needs.
+  ** They require using reflection whenever we use `typedKey()` or initialize a key with data.
+  ** It could be optimized with global cache if needed.
+* Advanced typed map implementations:
+  ** Polymorphic.
+  ** Map returning nulls for missing nullable items.
+  ** Map that creates values on demand with value providers/factories.
+** Factory for creating a typed map for specific needs, with required features.
+* Java interop.
