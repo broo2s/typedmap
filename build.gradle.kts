@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.0"
-    id("org.jetbrains.dokka") version "1.4.32"
+    id("org.jetbrains.dokka") version "1.4.32" apply false
     id("com.palantir.git-version") version "0.12.3" apply false
 }
 
@@ -15,8 +15,14 @@ try {
 
 val projectVersion = createProjectVersion()
 
-group = "me.broot.typedmap"
-version = projectVersion.name
+allprojects {
+    group = "me.broot.typedmap"
+    version = projectVersion.name
+
+    repositories {
+        mavenCentral()
+    }
+}
 
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
@@ -35,12 +41,6 @@ subprojects {
 
     dependencies {
         testImplementation(kotlin("test-testng"))
-    }
-}
-
-allprojects {
-    repositories {
-        mavenCentral()
     }
 }
 
