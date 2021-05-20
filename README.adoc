@@ -182,12 +182,37 @@ NOTE: You could notice that we used `plusAssign()` operator (`+=`) earlier, and 
 
 == Installation
 
-Publishing `typedmap` library to a public Maven repository is a work in progress. Until then, the only way to use it is to manually download a jar file from releases section or to build it from sources. It has two dependencies which have to be resolved manually:
+Add a following dependency to the gradle/maven file:
 
-* `org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.0`
-* `org.jetbrains.kotlin:kotlin-reflect:1.5.0`
+.build.gradle
+[source,groovy]
+----
+dependencies {
+    implementation "me.broot.typedmap:typedmap-core:${version}"
+}
+----
 
-After adding the jar file and dependencies to a project, we can start using `typedmap`:
+.build.gradle.kts
+[source,kotlin]
+----
+dependencies {
+    implementation("me.broot.typedmap:typedmap-core:${version}")
+}
+----
+
+.pom.xml
+[source,xml]
+----
+<dependency>
+    <groupId>me.broot.typedmap</groupId>
+    <artifactId>typedmap-core</artifactId>
+    <version>${version}</version>
+</dependency>
+----
+
+Replace `${version}` with e.g.: "1.0.0". The latest available version is: image:https://img.shields.io/maven-central/v/me.broot.typedmap/typedmap-core[Maven Central]
+
+Now, we can start using `typedmap`:
 
 [source,kotlin]
 val map = simpleTypedMap()
