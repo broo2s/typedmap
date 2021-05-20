@@ -39,6 +39,21 @@ subprojects {
         }
     }
 
+    val dokkaHtml by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+    val dokkaJavadoc by tasks.getting(org.jetbrains.dokka.gradle.DokkaTask::class)
+
+    val dokkaJar by tasks.registering(Jar::class) {
+        dependsOn(dokkaHtml)
+        archiveClassifier.set("dokka")
+        from(dokkaHtml.outputDirectory)
+    }
+
+    val javadocJar by tasks.registering(Jar::class) {
+        dependsOn(dokkaJavadoc)
+        archiveClassifier.set("javadoc")
+        from(dokkaJavadoc.outputDirectory)
+    }
+
     dependencies {
         testImplementation(kotlin("test-testng"))
     }
