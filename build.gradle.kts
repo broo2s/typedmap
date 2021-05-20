@@ -3,6 +3,9 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
     kotlin("jvm") version "1.5.0"
+    `maven-publish`
+    signing
+
     id("org.jetbrains.dokka") version "1.4.32" apply false
     id("com.palantir.git-version") version "0.12.3" apply false
 }
@@ -56,6 +59,77 @@ subprojects {
 
     dependencies {
         testImplementation(kotlin("test-testng"))
+    }
+
+    if (name in listOf("typedmap-core")) {
+        apply(plugin = "maven-publish")
+        apply(plugin = "signing")
+
+        java {
+            withSourcesJar()
+        }
+
+        publishing {
+            publications {
+                create<MavenPublication>("mavenCentral") {
+                    version = if (projectVersion.isRelease) projectVersion.name else "${projectVersion.name}-SNAPSHOT"
+
+                    from(components["java"])
+                    artifact(javadocJar)
+                    artifact(dokkaJar)
+
+                    pom {
+                        name.set("typedmap")
+                        description.set("Type-safe heterogeneous map in Kotlin.")
+                        url.set("https://github.com/brutall/typedmap")
+
+                        licenses {
+                            license {
+                                name.set("The Apache License, Version 2.0")
+                                url.set("http://www.apache.org/licenses/LICENSE-2.0.txt")
+                            }
+                        }
+                        developers {
+                            developer {
+                                name.set("Ryszard Wiśniewski")
+                                email.set("brut.alll@gmail.com")
+                            }
+                        }
+                        scm {
+                            connection.set("scm:git:git://github.com/brutall/typedmap.git")
+                            developerConnection.set("scm:git:ssh://git@github.com/brutall/typedmap.git")
+                            url.set("https://github.com/brutall/typedmap")
+                        }
+                    }
+                }
+            }
+
+            repositories {
+                maven {
+                    name = "ossrh"
+
+                    if (projectVersion.isRelease) {
+                        setUrl("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+                    } else {
+                        setUrl("https://s01.oss.sonatype.org/content/repositories/snapshots")
+                    }
+
+                    val ossrhUsername: String? by project
+                    val ossrhPassword: String? by project
+                    if (ossrhUsername != null && ossrhPassword != null) {
+                        credentials {
+                            username = ossrhUsername
+                            password = ossrhPassword
+                        }
+                    }
+                }
+            }
+        }
+
+        signing {
+            useGpgCmd()
+            sign(publishing.publications["mavenCentral"])
+        }
     }
 }
 
