@@ -16,7 +16,7 @@ import kotlin.reflect.KType
  * @see me.broot.typedmap.core.impl.TypedKey
  * @see me.broot.typedmap.core.impl.typedKey
  */
-interface ITypedKey<V> {
+public interface ITypedKey<V> {
 //    val keyType: KType
 
     /**
@@ -24,5 +24,5 @@ interface ITypedKey<V> {
      *
      * It must always be the same type as `V`. For example, `valueType` of `ITypedKey<String>` must be a `String` type.
      */
-    val valueType: KType
+    public val valueType: KType
 }

@@ -16,7 +16,7 @@ import me.broot.typedmap.core.util.OptionalValue
  * @see ITypedKey
  * @see me.broot.typedmap.core.impl.simpleTypedMap
  */
-interface TypedMap {
+public interface TypedMap {
     /**
      * Returns a value associated with the provided key.
      *
@@ -24,17 +24,17 @@ interface TypedMap {
      *
      * @throws NoSuchElementException
      */
-    operator fun <V> get(key: ITypedKey<V>): V = getOptional(key).get()
+    public operator fun <V> get(key: ITypedKey<V>): V = getOptional(key).get()
 
     /**
      * Returns a value associated with the provided key or null if an item does not exist.
      */
-    fun <V> getOrNull(key: ITypedKey<V>): V? = getOptional(key).getOrNull()
+    public fun <V> getOrNull(key: ITypedKey<V>): V? = getOptional(key).getOrNull()
 
     /**
      * Checks whether the provided key exists in the map.
      */
-    operator fun <V> contains(key: ITypedKey<V>): Boolean = getOptional(key).isPresent
+    public operator fun <V> contains(key: ITypedKey<V>): Boolean = getOptional(key).isPresent
 
     /**
      * Returns a value associated with the provided key with three possible states: non-null value, null or not exist.
@@ -44,5 +44,5 @@ interface TypedMap {
      *
      * @see OptionalValue
      */
-    fun <V> getOptional(key: ITypedKey<V>): OptionalValue<V>
+    public fun <V> getOptional(key: ITypedKey<V>): OptionalValue<V>
 }

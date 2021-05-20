@@ -69,6 +69,10 @@ subprojects {
             withSourcesJar()
         }
 
+        kotlin {
+            explicitApi()
+        }
+
         publishing {
             publications {
                 create<MavenPublication>("mavenCentral") {

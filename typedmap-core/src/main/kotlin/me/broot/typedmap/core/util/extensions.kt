@@ -12,7 +12,7 @@ import me.broot.typedmap.core.impl.typedKey
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> TypedMap.get(): V = get(typedKey())
+public inline fun <reified V> TypedMap.get(): V = get(typedKey())
 
 /**
  * Returns a value of the provided type or null if it does not exist.
@@ -21,7 +21,7 @@ inline fun <reified V> TypedMap.get(): V = get(typedKey())
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> TypedMap.getOrNull(): V? = getOrNull(typedKey<V>())
+public inline fun <reified V> TypedMap.getOrNull(): V? = getOrNull(typedKey<V>())
 
 /**
  * Checks whether a value of the provided type exists in the map.
@@ -30,7 +30,7 @@ inline fun <reified V> TypedMap.getOrNull(): V? = getOrNull(typedKey<V>())
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> TypedMap.contains(): Boolean = contains(typedKey<V>())
+public inline fun <reified V> TypedMap.contains(): Boolean = contains(typedKey<V>())
 
 /**
  * Returns a value of the provided type with three possible states: non-null value, null or not exist.
@@ -40,7 +40,7 @@ inline fun <reified V> TypedMap.contains(): Boolean = contains(typedKey<V>())
  * @see OptionalValue
  */
 @ExperimentalStdlibApi
-inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(typedKey())
+public inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(typedKey())
 
 /**
  * Removes a value of the provided type and returns this value.
@@ -50,7 +50,7 @@ inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(ty
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> MutableTypedMap.remove(): V = remove(typedKey())
+public inline fun <reified V> MutableTypedMap.remove(): V = remove(typedKey())
 
 /**
  * Removes a value of the provided type. Returns this value or null if it does not exist.
@@ -59,7 +59,7 @@ inline fun <reified V> MutableTypedMap.remove(): V = remove(typedKey())
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> MutableTypedMap.removeIfSet(): V? = removeIfSet(typedKey<V>())
+public inline fun <reified V> MutableTypedMap.removeIfSet(): V? = removeIfSet(typedKey<V>())
 
 /**
  * Stores the value and identify it by its type.
@@ -68,7 +68,7 @@ inline fun <reified V> MutableTypedMap.removeIfSet(): V? = removeIfSet(typedKey<
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> MutableTypedMap.setByType(value: V) {
+public inline fun <reified V> MutableTypedMap.setByType(value: V) {
     set(typedKey(), value)
 }
 
@@ -80,11 +80,11 @@ inline fun <reified V> MutableTypedMap.setByType(value: V) {
  * @see typedKey
  */
 @ExperimentalStdlibApi
-inline operator fun <reified V> MutableTypedMap.plusAssign(value: V) = setByType(value)
+public inline operator fun <reified V> MutableTypedMap.plusAssign(value: V) : Unit = setByType(value)
 
 /**
  * Returns read-only wrapper around `MutableTypedMap`.
  *
  * Returned map reacts to changes in the original map.
  */
-fun MutableTypedMap.toTypedMap(): TypedMap = object : TypedMap by this {}
+public fun MutableTypedMap.toTypedMap(): TypedMap = object : TypedMap by this {}

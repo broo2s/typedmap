@@ -12,7 +12,7 @@ import me.broot.typedmap.core.util.getOrElse
  * This is a basic implementation of `MutableTypedMap`. It does not provide any advanced features like e.g. polymorphic
  * value access.
  */
-fun simpleTypedMap(): MutableTypedMap = SimpleTypedMap()
+public fun simpleTypedMap(): MutableTypedMap = SimpleTypedMap()
 
 internal class SimpleTypedMap : MutableTypedMap {
     private val map = mutableMapOf<ITypedKey<Any?>, Any?>()

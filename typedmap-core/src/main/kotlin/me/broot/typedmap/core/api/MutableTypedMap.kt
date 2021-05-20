@@ -9,11 +9,11 @@ package me.broot.typedmap.core.api
  * @see ITypedKey
  * @see me.broot.typedmap.core.impl.simpleTypedMap
  */
-interface MutableTypedMap : TypedMap {
+public interface MutableTypedMap : TypedMap {
     /**
      * Stores the value and associates it with the provided key.
      */
-    operator fun <V> set(key: ITypedKey<V>, value: V)
+    public operator fun <V> set(key: ITypedKey<V>, value: V)
 
     /**
      * Removes a value associated with the provided key and returns this value.
@@ -22,10 +22,10 @@ interface MutableTypedMap : TypedMap {
      *
      * @throws NoSuchElementException
      */
-    fun <V> remove(key: ITypedKey<V>): V
+    public fun <V> remove(key: ITypedKey<V>): V
 
     /**
      * Removes a value associated with the provided key. Returns this value or null if it does not exist.
      */
-    fun <V> removeIfSet(key: ITypedKey<V>): V?
+    public fun <V> removeIfSet(key: ITypedKey<V>): V?
 }

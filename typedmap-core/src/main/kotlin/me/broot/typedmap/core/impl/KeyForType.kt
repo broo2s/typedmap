@@ -34,7 +34,7 @@ import kotlin.reflect.typeOf
  * @see TypedKey
  */
 @ExperimentalStdlibApi
-inline fun <reified V> typedKey(): ITypedKey<V> = KeyForType(typeOf<V>())
+public inline fun <reified V> typedKey(): ITypedKey<V> = KeyForType(typeOf<V>())
 
 @PublishedApi
 internal class KeyForType<V>(override val valueType: KType) : ITypedKey<V> {

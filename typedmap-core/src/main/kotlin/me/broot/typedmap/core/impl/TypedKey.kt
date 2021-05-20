@@ -51,7 +51,7 @@ import kotlin.reflect.full.*
  *
  * @see ITypedKey
  */
-abstract class TypedKey<V> : ITypedKey<V> {
+public abstract class TypedKey<V> : ITypedKey<V> {
 //    final override val keyType: KType
     final override val valueType: KType
 
