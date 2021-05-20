@@ -107,9 +107,4 @@ abstract class AbstractMutableTypedMapTest<T : MutableTypedMap> {
 
     private object Username : TypedKey<String>()
     private object SessionId : TypedKey<String>()
-    private object Visits : TypedKey<Int>()
-
-    private data class User(
-        val name: String
-    )
 }

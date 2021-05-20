@@ -40,7 +40,7 @@ inline fun <reified V> TypedMap.contains(): Boolean = contains(typedKey<V>())
  * @see OptionalValue
  */
 @ExperimentalStdlibApi
-inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(typedKey<V>())
+inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(typedKey())
 
 /**
  * Removes a value of the provided type and returns this value.
@@ -51,7 +51,6 @@ inline fun <reified V> TypedMap.getOptional(): OptionalValue<V> = getOptional(ty
  */
 @ExperimentalStdlibApi
 inline fun <reified V> MutableTypedMap.remove(): V = remove(typedKey())
-
 
 /**
  * Removes a value of the provided type. Returns this value or null if it does not exist.
